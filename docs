@@ -1,0 +1,46 @@
+LOOPBACK ACCESS CONTROL
+-loopback allow creation of acls which controll the user access of data.To define access controll we use the command "slc loopback:acl"
+  this enable to create a static definition before runtime.this command asks some necessary information like model name ,acl scope,method name, access type, role,permission.
+  acls rules are describes as an array of objects -[model,property,accesstype,princpletype,permission].
+  1.model-the target model name for example user.
+  2.property-the target method name for example find,findone.
+  3.accesstype-the access type EXECUTE, READ AND WRIGHT.
+  4.princpletype-a.USER,b.APP,c.Role-custome role,$owner,$authenticated,$unauthenticated,$everyone.
+  5.permission-DENY,ALLOW.
+
+LOOPBACK-TEST
+-this application consist of four type of users-guest,owner,team member and administrator.Each user has permission to perform tasks based on their role and application's ACL (access cntrol list) entries.In this project I have created three model.
+1.user-inherited form base class User,Properties-None.
+2.team-base class-PersistedModel,Properties-OwnerId,MemberId.
+3.project-base class-PersistedModel,Properties-name,balance.
+We have added three remote method in project.js 
+1.listprojects-is a remote method which allow access for all users.
+2.donate-is remote method which takes an argument(the amount of money to donate).we add an acls that restricts access to any authenticated user.(guest are not allowed to donate).
+3.withdraw-remote method similer to donate but substract money from the balance.only the project owner is allowed to withdraw.we enforce this using "slc llopback:acl" to generate an acl restricting access to $owner.
+MODEL RELATION
+1.user-has many project and team.
+2.team-has many user.
+3.project-belongs to user.
+created a bootscript name-sample-models.js.this script does the following things.
+1.created three users john,jane and Bob.
+2.create project1 and set john as owner and add john and jane as team member.
+3.create project2 and set jane as owner and  jane as a team member.
+4.created role admin and a role mapping to make bob admin.
+*role-resolver.js-This file checks if the context relates to the project model and if the request maps to a user. If these two requirements are not met, the request is denied. Otherwise, we check to see if the user is a team member and process the request accordingly.
+
+/*** Guest Guest
+Role = $everyone, $unauthenticated
+Has access to the "List projects" function, but none of the others
+John Project owner
+Role = $everyone, $authenticated, teamMember, $owner
+Can access all functions except "View all projects"
+Jane Project team member
+Role = $everyone, $authenticated, teamMember
+Can access all functions except "View all projects" and "Withdraw"
+Bob Administrator
+Role = $everyone, $authenticated, admin
+Can access all functions except "Withdraw"***/
+
+
+
+  
